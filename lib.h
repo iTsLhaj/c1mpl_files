@@ -12,8 +12,10 @@ typedef struct {
 
 } player_;
 
+/* make save dir */
+void mksd();
 
-char *get_last_save_file(char *dir_);
+char *get_last_save_file(const char *dir_);
 
 player_ *savefile_load_stats(char *filename);
 char *savefile_save_stats(player_ *player);

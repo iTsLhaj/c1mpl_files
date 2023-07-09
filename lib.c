@@ -9,6 +9,8 @@
 #include "lib.h"
 
 
+const char *save_dir = "./savedir/";
+
 /* default starting values */
 unsigned int default_level = 1;
 float default_hp = 100.0f;
@@ -21,6 +23,48 @@ char *default_guild = 0;
 char *SAVE_FILE_EXTENTION = ".u1p";
 unsigned int SAVE_FILE_EXTENTION_LEN = 4;
 
+/* check if save dir exists otherwise make one */
+void mksd() {
+    /* make save dir */
+
+    DIR *dirp = opendir(".");
+    while (dirp) {
+        struct dirent *dp = readdir(dirp);
+        if(dp != NULL)
+        {
+            if (strncmp(dp->d_name, "savedir", 7) == 0)
+            {
+                closedir(dirp);
+                return ;
+            } else 
+                continue;
+        } else 
+            break ;
+    }
+
+    char *cmd_ = malloc(16);
+
+    strcat(cmd_, "mkdir ");
+    strcat(cmd_, save_dir);
+
+    system(cmd_);
+    free(cmd_);
+
+}
+
+char* make_path(char *fn)
+{
+
+    unsigned int size = strlen(save_dir) + strlen(fn);
+    char *path = malloc(size);
+    memset(path, 0, size);
+
+    strcat(path, save_dir);
+    strcat(path, fn);
+
+    return path;
+
+}
 
 char *reverse_string(char *str, int len)
 {
@@ -68,7 +112,7 @@ char *itoa(int n)
     return rv;
 }
 
-char *get_last_save_file(char *dir_)
+char *get_last_save_file(const char *dir_) /* FIXME: not sorted! it just check's if file end's with .u1p */
 {
     DIR *dirp = opendir(dir_);
     while (dirp) {
@@ -130,7 +174,7 @@ char *savefile_save_stats(player_ *player)
 {
 
     char *filename = get_sfname();
-    FILE *sf_ = fopen(filename, "wb");
+    FILE *sf_ = fopen(make_path(filename), "wb");
 
     if (sf_ != NULL)
     {
@@ -153,7 +197,7 @@ player_ *savefile_load_stats(char *filename)
 {
 
     player_ *loadedPlayer = (player_*)malloc(sizeof(player_));
-    FILE *sf_ = fopen(filename, "rb");
+    FILE *sf_ = fopen(make_path(filename), "rb");
 
     if(sf_ != NULL)
     {
@@ -179,7 +223,9 @@ player_ *init_player()
         i'll pretend that save folder is the current dir i wanna get done with this asap! "."
     */
 
-    char *file_name = get_last_save_file(".");
+    char *file_name = get_last_save_file(save_dir);
+    if(file_name != NULL)
+        printf("%s\n", make_path(file_name));
 
     // READ
     if(file_name != NULL)
@@ -219,7 +265,7 @@ player_ *init_player()
         if(r == NULL)
             return NULL;
         else
-            printf("Saved to: %s\n", r);
+            printf("Saved to: %s\n", make_path(r));
         
         return player;
         
@@ -259,55 +305,5 @@ void show_pdata(player_ *player)
     printf("➤ ʜᴘ            : %f\n", player->hp);
 
     printf("\n----- ᴇɴᴅ ------\n");
-
-}
-
-int main(int argc, char **argv)
-{
-
-    // TODO: examine the code & remove bugs
-    while (1) /* game loop ! */
-    {
-
-        int choice;
-        player_ *player;
-
-        printf("\n 0. exit\n\n 1. init new player obj\n\n 2. change player values\n\n 3. show player stats (comming soon)\n\n\t > ");
-        scanf("%i", &choice);
-
-        if(!(0 < choice < 3)) {
-            printf("\nChoices are between 0 - 3 !\n");
-            continue;
-        }
-
-        switch (choice)
-        {
-        case 0:
-            printf("cya ^^ !\n");
-            exit(0);
-
-        case 1:
-            printf("Initializing New Player Obj!\n");
-            player = init_player();
-            break;
-
-        case 2:
-            printf("Changing Player Values!\n");
-            change_pdata(player);
-            break;
-
-        case 3:
-            printf("SettingUp Player data to display!\n");
-            show_pdata(player);
-            break;
-
-        default:
-            break;
-        }
-        
-
-    }
-
-    return 0;
 
 }
