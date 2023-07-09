@@ -1,9 +1,26 @@
+
+#include <stdio.h>
 #include <unistd.h>
 #include <dirent.h>
 #include <string.h>
 #include <time.h>
+#include <stdlib.h>
 
 #include "lib.h"
+
+
+/* default starting values */
+unsigned int default_level = 1;
+float default_hp = 100.0f;
+
+/* display name is assigned by the player! */
+
+char *default_title = 0;
+char *default_guild = 0;
+
+char *SAVE_FILE_EXTENTION = ".u1p";
+unsigned int SAVE_FILE_EXTENTION_LEN = 4;
+
 
 char *reverse_string(char *str, int len)
 {
@@ -58,7 +75,7 @@ char *get_last_save_file(char *dir_)
         struct dirent *dp = readdir(dirp);
         if(dp != NULL)
         {
-            if (strncmp(reverse_string(dp->d_name, strlen(dp->d_name)), reverse_string(".u1p", 4), 4) == 0)
+            if (strncmp(reverse_string(dp->d_name, strlen(dp->d_name)), reverse_string(SAVE_FILE_EXTENTION, SAVE_FILE_EXTENTION_LEN), SAVE_FILE_EXTENTION_LEN) == 0)
             {
                 closedir(dirp);
                 return dp->d_name;
@@ -90,6 +107,8 @@ char *get_sfname(void)
 
 
     char *fname = malloc(25);
+    memset(fname, 0, 25);
+
     int i = 0, j = 0;
     while (i < 6)
     {
@@ -103,42 +122,56 @@ char *get_sfname(void)
         i++;
     }
 
-
     return fname;
+
+}
+
+char *savefile_save_stats(player_ *player)
+{
+
+    char *filename = get_sfname();
+    FILE *sf_ = fopen(filename, "wb");
+
+    if (sf_ != NULL)
+    {
+
+        fwrite(player, sizeof(player_), 1, sf_);
+        fclose(sf_);
+        
+    }else{
+
+        fprintf(stderr, "\n There was an error while opening a file!");
+        return NULL;
+    
+    }
+
+    return filename;
 
 }
 
 player_ *savefile_load_stats(char *filename)
 {
 
-    player_ loadedP_t;
-    FILE *sf_ = fopen(filename, "r");
+    player_ *loadedPlayer = (player_*)malloc(sizeof(player_));
+    FILE *sf_ = fopen(filename, "rb");
+
     if(sf_ != NULL)
     {
         
-        fread(&loadedP_t, sizeof(player_), 1, sf_);
+        fread(loadedPlayer, sizeof(player_), 1, sf_);
         fclose(sf_);
-        return &loadedP_t;
 
-    }else
-        return NULL;;
+        return loadedPlayer;
 
-}
-
-int savefile_save_stats(char *filename, player_ *player)
-{
-
-    FILE *sf_ = fopen(filename, "w");
-
-    fwrite(player, sizeof(player_), 1, sf_);
-    fclose(sf_);
-
-    return 0;
+    }else{
+        fprintf(stderr, "couldn't open file or file has no content");
+        return NULL;
+    }
 
 }
 
 /* player stats init! */
-int init_player(player_ *player)
+player_ *init_player()
 {
 
     // Check if save file exists!
@@ -146,45 +179,135 @@ int init_player(player_ *player)
         i'll pretend that save folder is the current dir i wanna get done with this asap! "."
     */
 
-    char *file_name = malloc(20);
-    file_name = get_last_save_file(".");
+    char *file_name = get_last_save_file(".");
 
+    // READ
     if(file_name != NULL)
     {
-        player_ *loaded_stats = savefile_load_stats(file_name);
         
-        if(loaded_stats == NULL)
-        {
-            fprintf(stderr, "[!] Something WentWrong! [line:158] : savefile_load_stats returned NULL value [!]");
-            return -1;
-        }
+        printf("SaveFile Found! ... Loading Game data!\n");
+        return savefile_load_stats(file_name);
 
-        player->level = loaded_stats->level;
-        player->hp = loaded_stats->hp;
-        player->display_name = loaded_stats->display_name;
-        player->title = loaded_stats->title;
-        player->guild = loaded_stats->guild;
-
-        free(loaded_stats);
-
-        return 0;
     } else {
 
+        // WRITE
+
+        player_ *player = (player_*)malloc(sizeof(player_));
+        printf("SaveFile doesen't exist :c !\n");
+        
         player->level = default_level;
         player->hp = default_hp;
-        player->display_name = fgets("display name!: ", 16, stdin);
-        player->title = default_title;
-        player->guild = default_guild;
 
-        int r = savefile_save_stats(get_sfname(), player); 
+        printf("type a display name: ");
+        getchar();
+        
+        /* getchar();
+        
+            i wanna let u know that i've been struggling with fgets
+            then i found out why XD 
+            thanks to @MacGyver from cprogramming forume !
+
+            source: https://cboard.cprogramming.com/c-programming/105615-user-input-gets-skipped.html
+        
+        */
+
+        fgets(player->display_name, 48, stdin);
+
+        printf("\nSaving Game data ...\n");
+        char* r = savefile_save_stats(player); 
     
-        if(r == 0)
-            return 0;
+        if(r == NULL)
+            return NULL;
         else
-            return -1;
+            printf("Saved to: %s\n", r);
+        
+        return player;
         
     }
 
-    return -1;
+    return NULL;
+
+}
+
+void change_pdata(player_ *player)
+{
+
+    memcpy(player->guild, "indonesia patch notes guild", 28);
+    memcpy(player->title, "son of Raftel", 14);
+    player->hp = 21915.0f;
+    player->level = 159;
+
+}
+
+void show_pdata(player_ *player)
+{
+
+    printf("\n----- ꜱᴛᴀᴛꜱ -----\n\n");
+
+    /*
+        ➤ ᴅɪꜱᴘʟᴀʏ ɴᴀᴍᴇ  : %s\n
+        ➤ ᴛɪᴛʟᴇ         : %s\n
+        ➤ ɢᴜɪʟᴅ         : %s\n
+        ➤ ʟᴇᴠᴇʟ         : %s\n
+        ➤ ʜᴘ            : %s\n
+    */
+
+    printf("➤ ᴅɪꜱᴘʟᴀʏ ɴᴀᴍᴇ  : %s\n", player->display_name);
+    printf("➤ ᴛɪᴛʟᴇ         : %s\n", player->title);
+    printf("➤ ɢᴜɪʟᴅ         : %s\n", player->guild);
+    printf("➤ ʟᴇᴠᴇʟ         : %i\n", player->level);
+    printf("➤ ʜᴘ            : %f\n", player->hp);
+
+    printf("\n----- ᴇɴᴅ ------\n");
+
+}
+
+int main(int argc, char **argv)
+{
+
+    // TODO: examine the code & remove bugs
+    while (1) /* game loop ! */
+    {
+
+        int choice;
+        player_ *player;
+
+        printf("\n 0. exit\n\n 1. init new player obj\n\n 2. change player values\n\n 3. show player stats (comming soon)\n\n\t > ");
+        scanf("%i", &choice);
+
+        if(!(0 < choice < 3)) {
+            printf("\nChoices are between 0 - 3 !\n");
+            continue;
+        }
+
+        switch (choice)
+        {
+        case 0:
+            printf("cya ^^ !\n");
+            exit(0);
+
+        case 1:
+            printf("Initializing New Player Obj!\n");
+            player = init_player();
+            break;
+
+        case 2:
+            printf("Changing Player Values!\n");
+            change_pdata(player);
+            break;
+
+        case 3:
+            printf("SettingUp Player data to display!\n");
+            show_pdata(player);
+            break;
+
+        default:
+            break;
+        }
+        
+
+    }
+
+    return 0;
 
 }
