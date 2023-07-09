@@ -9,16 +9,21 @@ int main(int argc, char **argv)
 {
 
     mksd();
+    int lc = 0;
+
     while (1) /* game loop ! */
     {
-
+        lc += 1;
         /* FIXME: infinite loop when inserting a string instead of an int! */
 
         short choice;
         player_ *player;
 
-        printf("\n 0. exit\n\n 1. init new player obj\n\n 2. change player values\n\n 3. show player stats\n\n\t > ");
-        scanf("%i", &choice);
+        if(lc == 1)
+            player = init_player();
+
+        printf("\n 0. exit\n\n 1. change player values\n\n 2. show player stats\n\n\t > ");
+        choice = getchar() - 48;
 
         if(!(0 < choice < 3)) {
             printf("\nChoices are between 0 - 3 !\n");
@@ -38,18 +43,17 @@ int main(int argc, char **argv)
             exit(0);
 
         case 1:
-            printf("Initializing New Player Obj!\n");
-            player = init_player();
-            break;
-
-        case 2:
             printf("Changing Player Values!\n");
             change_pdata(player);
             break;
 
-        case 3:
+        case 2:
             printf("SettingUp Player data to display!\n");
             show_pdata(player);
+            break;
+        
+        case 3:
+            printf("%p\n> %s\n", player, player->display_name);
             break;
 
         default:

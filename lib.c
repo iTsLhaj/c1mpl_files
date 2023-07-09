@@ -234,29 +234,27 @@ player_ *init_player()
         printf("SaveFile Found! ... Loading Game data!\n");
         return savefile_load_stats(file_name);
 
-    } else {
+    } else { // WRITE
 
-        // WRITE
-
-        player_ *player = (player_*)malloc(sizeof(player_));
         printf("SaveFile doesen't exist :c !\n");
-        
+        player_ *player = (player_*)malloc(sizeof(player_));
+
         player->level = default_level;
         player->hp = default_hp;
-
-        printf("type a display name: ");
-        getchar();
         
         /* getchar();
         
             i wanna let u know that i've been struggling with fgets
             then i found out why XD 
-            thanks to @MacGyver from cprogramming forume !
+            thanks to @MacGyver from cprogramming forum !
 
             source: https://cboard.cprogramming.com/c-programming/105615-user-input-gets-skipped.html
         
         */
 
+        printf("type a display name: ");
+        getchar();
+       
         fgets(player->display_name, 48, stdin);
 
         printf("\nSaving Game data ...\n");
@@ -287,7 +285,7 @@ void change_pdata(player_ *player)
 
 void show_pdata(player_ *player)
 {
-
+    printf("%p\n", player);
     printf("\n----- ꜱᴛᴀᴛꜱ -----\n\n");
 
     /*

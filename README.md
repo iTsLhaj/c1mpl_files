@@ -1,7 +1,9 @@
 
+<img src="assets/w7ed lbanner zido tem tem tem like s7rawi said once tem tem tem.png" alt="kurisu makise dyal sidi bibi">
+
 #### R/W FILES
 
-- this lil project will be a simple implementation of FILES in c
+- still learing so this lil project will be a simple implementation of FILES in c
 - in this case i will try to simulate how to save and read game data / player data
 
 
@@ -26,3 +28,6 @@
 
 *i'll upload a video later ^^*
 
+0 used to exit
+1 for changing player values to a new specific ones
+2 display stats/values !
